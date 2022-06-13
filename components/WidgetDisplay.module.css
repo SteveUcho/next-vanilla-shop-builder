@@ -1,0 +1,15 @@
+.container {
+    border: 1px solid lightgrey;
+    border-radius: 2px;
+    margin: 8px 0 8px 0;
+    background-color: white;
+}
+
+.title {
+    padding: 8px;
+}
+
+.widgetsList {
+    min-height: 200px;
+    padding: 8px;
+}
