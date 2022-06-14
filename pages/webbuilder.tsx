@@ -1,26 +1,29 @@
 import { Button, Col, Container, Row } from "react-bootstrap";
+import { memo, useCallback, useState } from 'react'
+import type { FC } from 'react'
 import NavBar from "../components/NavBar";
-import BasicWidget from '../components/BasicWidget';
+import { BasicWidget } from '../components/BasicWidget';
 import initialData from "../lib/initialData";
-import { DragDropContext, resetServerContext } from "react-beautiful-dnd";
-import React from "react";
 import { v4 as uuid } from 'uuid';
+import update from 'immutability-helper'
+import { DndProvider } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
 
 import WidgetColumn from "../components/WidgetColumn";
 import WidgetLibrary from "../components/WidgetLibrary";
 import MultiColumnWidget from "../components/MultiColumnWidget";
 
-class WebBuilder extends React.Component {
-    state = initialData;
-    reorder = (list, startIndex, endIndex) => {
+const WebBuilder: FC = memo(function Container() {
+    const [globalState, setGlobalState] = useState(initialData)
+    const reorder = (list, startIndex, endIndex) => {
         const result = Array.from(list);
         const [removed] = result.splice(startIndex, 1);
         result.splice(endIndex, 0, removed);
-    
+
         return result;
     };
 
-    copy = (source: string[], destination, droppableSource, droppableDestination) => {
+    const copy = (source: string[], destination, droppableSource, droppableDestination) => {
         const sourceClone = Array.from(source);
         const destClone = Array.from(destination.widgetKeys);
         const newKey = uuid()
@@ -47,30 +50,31 @@ class WebBuilder extends React.Component {
         console.log(res)
         return temp
     };
-    
-    move = (source, destination, droppableSource, droppableDestination) => {
-        const sourceClone = Array.from(source.widgetKeys);
-        const destClone = Array.from(destination.widgetKeys);
-        const [removed] = sourceClone.splice(droppableSource.index, 1);
-    
-        destClone.splice(droppableDestination.index, 0, removed);
-    
-        return {
-            ...this.state,
-            [source.id]: {
-                ...source,
-                widgetKeys: sourceClone
-            },
-            [destination.id]: {
-                ...destination,
-                widgetKeys: destClone
-            }
-        };
-    };
-    submitWebsite = () => {
+
+    const moveCard = useCallback(
+        (id: string, fromIndex: number, toIndex: number, fromContainer: string, toContainer: string) => {
+            setGlobalState(
+                update(globalState, {
+                    [fromContainer]: {
+                        widgetKeys: { $splice: [[[toIndex, 0, id],]] }
+                    },
+                    [toContainer]: {
+                        widgetKeys: {
+                            $splice: [
+                                [fromIndex, 1],
+                            ]
+                        }
+                    },
+                }),
+            )
+        },
+        [globalState, setGlobalState],
+    );
+    const submitWebsite = () => {
         console.log(this.state.websiteStack.widgetKeys)
-    }
-    onDragEnd = result => {
+    };
+
+    const onDragEnd = result => {
         const { destination, source, draggableId } = result;
         if (!destination) {
             return;
@@ -113,71 +117,59 @@ class WebBuilder extends React.Component {
                 );
                 break;
         }
-    }
+    };
 
-    createColumn(root) {
+    const createColumn = (root) => {
         const currColumn = root
         const widgets = currColumn.widgetKeys.map((widgetKey, index) => {
             const currWidget = this.state.websiteStack.data[widgetKey];
             if (currWidget.type === "parent") {
-                const  newColumns = currWidget.columns.map(columnKey => {
+                const newColumns = currWidget.columns.map(columnKey => {
                     return this.createColumn(this.state[columnKey])
                 });
                 return (<MultiColumnWidget key={currWidget.key} widget={currWidget} index={index}>
-                            { newColumns }
-                        </MultiColumnWidget>)
+                    {newColumns}
+                </MultiColumnWidget>)
             }
             else {
-                return <BasicWidget key={currWidget.key} widget={currWidget} index={index} />
+                return <BasicWidget id={currWidget.key} index={index} containerId={currColumn.id} widget={currWidget} moveCard={moveCard} />
             }
         });
         return (<WidgetColumn key={currColumn.id} column={currColumn}>
-                    { widgets }
-                </WidgetColumn>)
-    }
+            {widgets}
+        </WidgetColumn>)
+    };
+    return (
+        <div className="App">
+            <NavBar />
+            <DndProvider backend={HTML5Backend}>
+                <Container fluid>
+                    <Row>
+                        <Col md={3}>
+                            {
+                                [0].map(() => {
+                                    const column = this.state.widgetsLibrary;
+                                    const widgets = column.widgetIds.map(widgetIds => this.state.widgetsLibrary.data[widgetIds]);
 
-    render() {
-        return (
-            <div className="App">
-                <NavBar />
-                <DragDropContext onDragEnd={this.onDragEnd}>
-                    <Container fluid>
-                        <Row>
-                            <Col md={3}>
-                                {
-                                    [0].map(() => {
-                                        const column = this.state.widgetsLibrary;
-                                        const widgets = column.widgetIds.map(widgetIds => this.state.widgetsLibrary.data[widgetIds]);
-
-                                        return <WidgetLibrary key={column.id} column={column} widgets={widgets}/>
-                                    })
-                                }
-                            </Col>
-                            <Col md={9}>
-                                {this.createColumn(this.state.websiteStack)}
-                                <Button onClick={this.submitWebsite}> Submit </Button>
-                            </Col>
-                        </Row>
-                    </Container>
-                </DragDropContext>
-                <link
-                    rel="stylesheet"
-                    href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
-                    integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
-                    crossOrigin="anonymous"
-                />
-            </div>
-            
-        );
-    }
-}
-
-export async function getServerSideProps() {
-    resetServerContext();
-    return {
-      props: {},
-    }
-  }
-  
+                                    return <WidgetLibrary key={column.id} column={column} widgets={widgets} />
+                                })
+                            }
+                        </Col>
+                        <Col md={9}>
+                            {createColumn(globalState.websiteStack)}
+                            <Button onClick={submitWebsite}> Submit </Button>
+                        </Col>
+                    </Row>
+                </Container>
+            </DndProvider>
+            <link
+                rel="stylesheet"
+                href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+                integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+                crossOrigin="anonymous"
+            />
+        </div>
+    );
+})
 
 export default WebBuilder;
