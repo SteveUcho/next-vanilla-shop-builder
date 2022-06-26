@@ -1,0 +1,23 @@
+@mixin widget {
+    margin: 0 8px 0 8px;
+    border: 1px solid lightgrey;
+    background-color: white;
+    border-radius: 3px;
+}
+
+.basicWidget {
+    @include widget;
+    padding: 8px;
+}
+
+.clone {
+    @include widget;
+    padding: 8px;
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
+
+.multiColumnWidget {
+    @include widget;
+    margin-bottom: 8px;
+}

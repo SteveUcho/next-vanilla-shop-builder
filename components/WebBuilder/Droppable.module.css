@@ -1,0 +1,13 @@
+.droppable {
+    height: 16px;
+    margin: 2px 8px 2px 8px;
+    border-radius: 4px;
+}
+
+.canDrop {
+    background-color: lightgreen;
+}
+
+.ishovering {
+    background-color: lightblue;
+}

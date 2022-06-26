@@ -1,0 +1,45 @@
+.catalogItem {
+    border: 1px solid lightgray;
+    border-radius: 5px;
+    cursor: pointer;
+    transform: translateY(10px);
+    transition-duration: .2s;
+
+    &:hover {
+        transform: translateY(-10px);
+        transition-duration: .2s;
+        box-shadow: -5px 5px 15px 3px lightgray;
+
+        .itemName a {
+            color: yellowgreen;
+        }
+    }
+
+    .itemName a {
+        text-decoration: none;
+        color: green;
+    }
+
+    .itemBackground {
+        height: 150px;
+        background-position: center;
+        background-size: cover;
+        border-radius: 5px 5px 0 0;
+    }
+    
+    .itemProperties {
+        padding: 8px;
+    }
+    
+    .itemTag {
+        margin: 5px;
+        padding: 8px;
+        border-radius: 10px;
+        color: white;
+        background-color: slateblue;
+    }
+
+    .itemName:hover {
+        color: yellowgreen;
+    }
+}
