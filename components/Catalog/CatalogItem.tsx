@@ -1,3 +1,4 @@
+import { Session } from 'next-auth';
 import type { FC } from 'react';
 import React from 'react';
 import { ItemPreiew } from '../../types/CatalogTypes';
@@ -8,7 +9,7 @@ interface CatalogItemProps {
 }
 
 const CatalogItem: FC<CatalogItemProps> = function CatalogItem({
-    itemPreview
+    itemPreview,
 }) {
     const itemURL = "url(" + itemPreview.imageLink + ")"
     const anchorLinkRef = React.useRef(null)
@@ -27,15 +28,23 @@ const CatalogItem: FC<CatalogItemProps> = function CatalogItem({
         anchorLinkRef.current.click()
     }
 
+    function saveItemHandler() {
+        fetch('http://localhost:3000/api/post/saveItem')
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+
     return (
         <div className={styles.catalogItem} onClick={itemClickHandler}>
-            <div className={styles.itemBackground} style={{backgroundImage: itemURL}} />
+            <div className={styles.itemBackground} style={{ backgroundImage: itemURL }} />
             <div className={styles.itemProperties}>
                 <div>
-                    { anchorLinkHelper(itemPreview) }
+                    {anchorLinkHelper(itemPreview)}
                 </div>
                 <div>
                     <p>{itemPreview.blurb}</p>
+                    <button onClick={saveItemHandler}>Save Item</button>
                 </div>
                 <div className={styles.itemTags}>
                     {itemPreview.tags.map((tag, index) => {

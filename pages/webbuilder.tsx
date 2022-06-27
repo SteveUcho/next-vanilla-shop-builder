@@ -124,7 +124,7 @@ const WebBuilder: FC = memo(function WebBuilder() {
     };
 
     const submitWebsite = () => {
-        console.log(this.state.websiteStack.widgetKeys)
+        console.log(globalState);
     };
 
     return (

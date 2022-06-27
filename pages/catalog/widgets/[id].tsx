@@ -8,11 +8,18 @@ interface catalogItemProps {
 }
 
 const catalogItem: FC<catalogItemProps> = function catalogItem({ fullItem }) {
+    function saveItemHandler() {
+        fetch('http://localhost:3000/api/post/saveItem')
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
     return (
         <Container>
-            
-            <div className={styles.imageContainer} style={{backgroundImage: 'URL(' + fullItem.imageURL + ')'}} />
+            <div className={styles.imageContainer} style={{backgroundImage: 'URL(' + fullItem.imageURL + ')'}}>
+            </div>
             <h1>{fullItem.name}</h1>
+            <button onClick={saveItemHandler}>Save Item</button>
             <hr />
             <h2>Summary</h2>
             <p>{fullItem.summary}</p>
