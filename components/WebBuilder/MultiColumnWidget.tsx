@@ -42,7 +42,7 @@ const MultiColumnWidget: FC<MultiColumnWidgetProps> = function MultiColumnWidget
             className={styles.multiColumnWidget}
         >
             <div className={moreStyles.title}>
-                { widget.content }
+                { widget.name }
             </div>
             <Row>
                 {

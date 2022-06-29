@@ -1,45 +1,52 @@
 import type { FC } from 'react'
 import { memo } from 'react'
-import { useDrag, useDrop } from 'react-dnd'
+import { useDrag} from 'react-dnd'
 import styles from './Widgets.module.scss';
 
 import { ItemTypes } from '../../types/ItemTypes'
 import { Widget } from '../../types/WebBuilderStateTypes';
+import { Button } from 'react-bootstrap';
 
 export interface BasicWidgetProps {
-    uniqueKey: string
     widget: Widget
     index: number
     containerId: string
+    removeWidget: (containerID: string, index: number) => void
 }
 
 const BasicWidget: FC<BasicWidgetProps> = memo(function BasicWidget({
-    uniqueKey,
     index,
     containerId,
     widget,
+    removeWidget
 }) {
     const [{ isDragging }, drag] = useDrag(
         () => ({
             type: ItemTypes.WIDGET,
-            item: { key: uniqueKey, index, containerId },
+            item: { key: widget.key, index, containerId },
             collect: (monitor) => ({
                 isDragging: monitor.isDragging(),
             }),
         }),
-        [uniqueKey, index],
+        [widget.key, index],
     )
 
     const opacity = isDragging ? 0 : 1
 
+    function removeHelper() {
+        removeWidget(containerId, index);
+    }
+
     return (
         <div
-            key={uniqueKey}
             ref={drag}
             style={{ opacity }}
             className={styles.basicWidget}
         >
-            { widget.content }
+            { widget.name }
+            { "key: " + widget.key }
+            { "  " }
+            <Button onClick={removeHelper}>Delete</Button>
         </div>
     )
 })

@@ -3,7 +3,7 @@ import { unstable_getServerSession } from "next-auth/next";
 import clientPromise from '../../../../lib/mongodb';
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ObjectId } from 'mongodb';
-import { DndProvider } from 'react-dnd';
+import update from 'immutability-helper';
 
 export default async function handler(
     req: NextApiRequest,
@@ -72,16 +72,19 @@ export default async function handler(
     }
 
     const savedWidgetDocs = await cursor.toArray();
+    const widgetIDs = []
     const dataObj = {}
     savedWidgetDocs.forEach(doc => {
-        let temp= String(doc._id.valueOf());
+        let temp = String(doc._id.valueOf());
+        doc.id = doc._id
         dataObj[temp] = doc;
+        widgetIDs.push(temp);
     });
 
     // saved items section to be sent to client
     const savedWidgets = {
         title: "Saved Widgets",
-        itemIds: savedItemsList.itemIDs,
+        widgetIds: widgetIDs,
         data: dataObj
     }
 

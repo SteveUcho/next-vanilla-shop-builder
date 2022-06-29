@@ -22,18 +22,25 @@ const WebBuilder: FC = memo(function WebBuilder() {
         const getInitialData = async () => {
             const res = await fetch('http://localhost:3000/api/get/webbuilder/getWebsiteStack');
             const resJson = await res.json();
-            console.log(resJson.websiteStack);
-            // setGlobalState(websiteStack.websiteStack);
+            setGlobalState(resJson.websiteStack);
         }
         getInitialData();
     }, []);
 
     const reorder = (key: string, containerId: string, fromIndex: number, toIndex: number) => {
+        const temp = [...globalState.columns[containerId].widgetKeys]
+        if (toIndex > fromIndex) {
+            temp.splice(toIndex, 0, key);
+            temp.splice(fromIndex, 1);
+        } else {
+            temp.splice(fromIndex, 1);
+            temp.splice(toIndex, 0, key);
+        }
         setGlobalState(
             update(globalState, {
                 columns: {
                     [containerId]: {
-                        widgetKeys: {$splice: [[fromIndex, 1], [toIndex, 0, key]]}
+                        widgetKeys: {$set: temp}
                     }
                 }
             })
@@ -41,40 +48,39 @@ const WebBuilder: FC = memo(function WebBuilder() {
     };
 
     const copy = (key: string, toIndex: number, toContainer: string) => {
-        const newKey = uuid()
+        const newKey = uuid();
         const item: Widget = {
             ...globalState.widgetsLibrary.data[key],
             key: newKey
         };
-        update(globalState, {
-            widgets: {$merge: {newKey: item}},
-            columns: {
-                [toContainer]: {
-                    widgetKeys: {$splice: [[toIndex, 0, newKey]]}
+        setGlobalState(
+            update(globalState, {
+                widgets: { $merge: { [newKey]: item } },
+                columns: {
+                    [toContainer]: {
+                        widgetKeys: { $splice: [[toIndex, 0, newKey]] }
+                    }
                 }
-            }
-        });
+            })
+        );
     };
 
     const move = (key: string, fromIndex: number, fromContainer: string, toIndex: number, toContainer: string) => {
-        console.log(globalState)
-        const temp = update(globalState, {
-            columns: {
-                [fromContainer]: {
-                    widgetKeys: { $splice: [[fromIndex, 1],] }
-                },
-                [toContainer]: {
-                    widgetKeys: {
-                        $splice: [
-                            [toIndex, 0, key],
-                        ]
-                    }
-                },
-            }
-        })
-        console.log(temp);
         setGlobalState(
-            temp
+            update(globalState, {
+                columns: {
+                    [fromContainer]: {
+                        widgetKeys: { $splice: [[fromIndex, 1],] }
+                    },
+                    [toContainer]: {
+                        widgetKeys: {
+                            $splice: [
+                                [toIndex, 0, key],
+                            ]
+                        }
+                    },
+                }
+            })
         );
     };
 
@@ -98,11 +104,23 @@ const WebBuilder: FC = memo(function WebBuilder() {
         }
     };
 
+    function removeHelper(fromContainer: string, fromIndex: number) {
+        setGlobalState(
+            update(globalState, {
+                columns: {
+                    [fromContainer]: {
+                        widgetKeys: { $splice: [[fromIndex, 1],] }
+                    },
+                }
+            })
+        );
+    }
+
     const createColumn = (root: Column) => {
         const currColumn = root;
         const widgets = currColumn.widgetKeys.map((widgetKey, index) => {
             const currWidget = globalState.widgets[widgetKey];
-            if (currWidget.type === "parent") {
+            if (currWidget.widgetType === "parent") {
                 const newColumns = currWidget.columns.map(columnKey => {
                     return createColumn(globalState.columns[columnKey])
                 });
@@ -119,14 +137,14 @@ const WebBuilder: FC = memo(function WebBuilder() {
                 return (
                     <div key={currWidget.key}>
                         <Droppable index={index} containerId={currColumn.id} onDrop={onDrop} accepts={[ItemTypes.WIDGET, ItemTypes.ROW]} />
-                        <BasicWidget uniqueKey={currWidget.key} index={index} containerId={currColumn.id} widget={currWidget} />
+                        <BasicWidget index={index} containerId={currColumn.id} widget={currWidget} removeWidget={removeHelper} />
                     </div>
                 )
             }
         });
-        widgets.push(<Droppable key={currColumn.key} index={widgets.length} containerId={currColumn.id} onDrop={onDrop} accepts={[ItemTypes.WIDGET, ItemTypes.ROW]} />)
+        widgets.push(<Droppable key={currColumn.id} index={widgets.length} containerId={currColumn.id} onDrop={onDrop} accepts={[ItemTypes.WIDGET, ItemTypes.ROW, ItemTypes.CLONE]} />)
         return (
-            <WidgetColumn key={currColumn.key} uniqueKey={currColumn.key} column={currColumn}>
+            <WidgetColumn key={currColumn.id} uniqueKey={currColumn.id} column={currColumn}>
                 {widgets}
             </WidgetColumn>
         )
@@ -136,6 +154,13 @@ const WebBuilder: FC = memo(function WebBuilder() {
         console.log(globalState);
     };
 
+    function widgetsLibraryHelper() {
+        const column = globalState.widgetsLibrary;
+        const widgets = column.widgetIds.map(widgetId => globalState.widgetsLibrary.data[widgetId]);
+
+        return <WidgetLibrary column={column} widgets={widgets} />
+    }
+
     return (
         <div className="App">
             <DndProvider backend={HTML5Backend}>
@@ -143,14 +168,7 @@ const WebBuilder: FC = memo(function WebBuilder() {
                     <h1>Website Builder</h1>
                     <Row>
                         <Col md={3}>
-                            {
-                                [0].map(() => {
-                                    const column = globalState.widgetsLibrary;
-                                    const widgets = column.widgetIds.map(widgetIds => globalState.widgetsLibrary.data[widgetIds]);
-
-                                    return <WidgetLibrary key={column.id} column={column} widgets={widgets} />
-                                })
-                            }
+                            {widgetsLibraryHelper()}
                         </Col>
                         <Col md={9}>
                             {createColumn(globalState.columns.websiteStack)}

@@ -1,6 +1,7 @@
 export const ItemTypes = {
     WIDGET: 'widget',
     ROW: 'row',
+    CLONE: 'clone'
 }
 
 export interface WidgetItem {

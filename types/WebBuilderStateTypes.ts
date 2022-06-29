@@ -1,11 +1,10 @@
-interface WidgetTemplate {
+export interface WidgetTemplate {
     id: string
-    content: string
-    type: string
+    name: string
+    widgetType: string
 }
 
 export interface Column {
-    key: string
     id: string
     title: string
     widgetKeys: string[]
@@ -16,12 +15,14 @@ export interface Widget extends WidgetTemplate {
     columns?: string[]
 }
 
+export interface WidgetsLibrary {
+    title: string
+    widgetIds: string[]
+    data: Record<string, WidgetTemplate>
+}
+
 export interface WebsiteState {
-    widgetsLibrary: {
-        title: string
-        widgetIds: string[]
-        data: Record<string, WidgetTemplate>
-    },
+    widgetsLibrary: WidgetsLibrary,
     widgets: Record<string, Widget>,
     columns: Record<string, Column>
 }
