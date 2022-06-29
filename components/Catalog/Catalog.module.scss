@@ -1,7 +1,6 @@
 .catalogItem {
     border: 1px solid lightgray;
     border-radius: 5px;
-    cursor: pointer;
     transform: translateY(10px);
     transition-duration: .2s;
 
@@ -9,15 +8,15 @@
         transform: translateY(-10px);
         transition-duration: .2s;
         box-shadow: -5px 5px 15px 3px lightgray;
-
-        .itemName a {
-            color: yellowgreen;
-        }
     }
 
     .itemName a {
         text-decoration: none;
         color: green;
+
+        &:hover {
+            color: yellowgreen;
+        }
     }
 
     .itemBackground {

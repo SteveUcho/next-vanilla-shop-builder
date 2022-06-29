@@ -1,22 +1,22 @@
-import { singleItemResponse } from "../../../../../types/CatalogTypes"
+import clientPromise from '../../../../../lib/mongodb';
+import { ObjectId } from "mongodb";
 
-const store: Record<string, singleItemResponse> = {
-    'dfiungjgr3123': {
-        id: 'dfiungjgr3123',
-        itemType: "widget",
-        name: "Paragraph",
-        imageURL: "https://i.natgeofe.com/n/46b07b5e-1264-42e1-ae4b-8a021226e2d0/domestic-cat_thumb_square.jpg",
-        tags: ["Widget", "basic"],
-        summary: "This is an area where you can write a lot of stuff"
+export default async function handler(req, res) {
+    const { id: itemID } = req.query;
+
+    const connection = await clientPromise;
+    const query = {
+        _id: new ObjectId(itemID)
     }
-}
 
-function getItem(itemID: string): singleItemResponse {
-    return store[itemID]
-}
+    const shopBuilderDB = connection.db('shopBuilder');
+    const catalogCollection = shopBuilderDB.collection('catalog');
 
-export default (req, res) => {
-    const { id } = req.query;
-    const temp = getItem(id);
-    res.status(200).json(temp);
+    const fullItem = await catalogCollection.findOne(query)
+
+    const handlRes = {
+        item: fullItem
+    }
+
+    res.status(200).json(handlRes);
 }

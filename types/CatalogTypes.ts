@@ -5,11 +5,24 @@ export interface filterCategory {
 }
 
 export interface ItemPreiew {
-    id: string
+    _id: string
     name: string
-    imageLink: string
+    imageURL: string
     tags: string[]
-    blurb: string
+    summary: string
+    itemType: string
+}
+
+export interface PageItem {
+    _id: string
+    name: string
+    imageURL: string
+    tags: string[]
+    summary: string
+    itemType: string
+    // more to come
+    widgetType?: string
+    fontType?: string
 }
 
 export interface catalogResponse {
@@ -22,10 +35,9 @@ export interface widgetIDsResponse {
 }
 
 export interface singleItemResponse {
-    id: string
-    name: string
-    imageURL: string
-    tags: string[]
-    itemType: string
-    summary: string
+    item: PageItem
+}
+
+export interface savedItemsResponse {
+    savedItems: string[] // to be converted to set
 }

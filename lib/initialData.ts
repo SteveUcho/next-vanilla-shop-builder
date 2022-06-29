@@ -3,7 +3,6 @@ import { v4 as uuid } from "uuid";
 
 const initialData: WebsiteState = {
     widgetsLibrary: {
-        id: 'widgetsLibrary',
         title: 'Widgets',
         widgetIds: ['widget-1', 'widget-2', 'widget-3'],
         data: {

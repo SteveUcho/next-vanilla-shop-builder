@@ -1,5 +1,5 @@
 import { Button, Col, Container, Row } from "react-bootstrap";
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import type { FC } from 'react';
 import BasicWidget from '../components/WebBuilder/BasicWidget';
 import initialData from "../lib/initialData";
@@ -17,6 +17,16 @@ import Droppable from "../components/WebBuilder/Droppable";
 
 const WebBuilder: FC = memo(function WebBuilder() {
     const [globalState, setGlobalState] = useState(initialData)
+
+    useEffect(() => {
+        const getInitialData = async () => {
+            const res = await fetch('http://localhost:3000/api/get/webbuilder/getWebsiteStack');
+            const resJson = await res.json();
+            console.log(resJson.websiteStack);
+            // setGlobalState(websiteStack.websiteStack);
+        }
+        getInitialData();
+    }, []);
 
     const reorder = (key: string, containerId: string, fromIndex: number, toIndex: number) => {
         setGlobalState(
@@ -89,7 +99,7 @@ const WebBuilder: FC = memo(function WebBuilder() {
     };
 
     const createColumn = (root: Column) => {
-        const currColumn = root
+        const currColumn = root;
         const widgets = currColumn.widgetKeys.map((widgetKey, index) => {
             const currWidget = globalState.widgets[widgetKey];
             if (currWidget.type === "parent") {
@@ -103,7 +113,6 @@ const WebBuilder: FC = memo(function WebBuilder() {
                             {newColumns}
                         </MultiColumnWidget>
                     </div>
-                    
                 )
             }
             else {
