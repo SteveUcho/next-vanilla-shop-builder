@@ -1,7 +1,23 @@
+interface InputType {
+    name: string
+}
+
+export interface TextAreaInput extends InputType{
+    type: "textarea"
+    data: string
+}
+
+export interface SelectInput extends InputType {
+    type: "select"
+    options: string[]
+    choice: number
+}
+
 export interface WidgetTemplate {
     id: string
     name: string
-    widgetType: string
+    widgetType: "basic" | "parent"
+    propertyInputs: (TextAreaInput | SelectInput)[]
 }
 
 export interface Column {

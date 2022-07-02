@@ -3,12 +3,20 @@
     border: 1px solid lightgrey;
     background-color: white;
     border-radius: 3px;
-    cursor: pointer;
+
+    .widgetTitle {
+        cursor: pointer;
+        background-color: cornflowerblue;
+        padding: 8px
+    }
+
+    .widgetProperties {
+        padding: 8px;
+    }
 }
 
 .basicWidget {
     @include widget;
-    padding: 8px;
 }
 
 .clone {

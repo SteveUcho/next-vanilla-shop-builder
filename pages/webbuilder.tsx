@@ -1,5 +1,5 @@
 import { Button, Col, Container, Row } from "react-bootstrap";
-import { memo, useEffect, useState } from 'react';
+import { memo, ReactNode, useEffect, useState } from 'react';
 import type { FC } from 'react';
 import BasicWidget from '../components/WebBuilder/BasicWidget';
 import initialData from "../lib/initialData";
@@ -11,11 +11,11 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import WidgetColumn from "../components/WebBuilder/WidgetColumn";
 import WidgetLibrary from "../components/WebBuilder/WidgetLibrary";
 import MultiColumnWidget from "../components/WebBuilder/MultiColumnWidget";
-import { Column, Widget } from "../types/WebBuilderStateTypes";
+import { Column, SelectInput, TextAreaInput, WebsiteState, Widget } from "../types/WebBuilderStateTypes";
 import { ItemTypes, WidgetItem } from "../types/ItemTypes";
 import Droppable from "../components/WebBuilder/Droppable";
 
-const WebBuilder: FC = memo(function WebBuilder() {
+const WebBuilder: FC = function WebBuilder() {
     const [globalState, setGlobalState] = useState(initialData)
 
     useEffect(() => {
@@ -49,20 +49,46 @@ const WebBuilder: FC = memo(function WebBuilder() {
 
     const copy = (key: string, toIndex: number, toContainer: string) => {
         const newKey = uuid();
-        const item: Widget = {
-            ...globalState.widgetsLibrary.data[key],
-            key: newKey
-        };
-        setGlobalState(
-            update(globalState, {
-                widgets: { $merge: { [newKey]: item } },
-                columns: {
-                    [toContainer]: {
-                        widgetKeys: { $splice: [[toIndex, 0, newKey]] }
+        const temp = globalState.widgetsLibrary.data[key];
+        let item = {}
+        if (temp.widgetType === "parent") {
+            const columnID = uuid();
+            item = {
+                ...globalState.widgetsLibrary.data[key],
+                key: newKey,
+                columns: [columnID],
+            };
+            setGlobalState(
+                update(globalState, {
+                    widgets: { $merge: { [newKey]: item } },
+                    columns: {
+                        [toContainer]: {
+                            widgetKeys: { $splice: [[toIndex, 0, newKey]] }
+                        },
+                        [columnID]: {$set: {
+                            id: columnID,
+                            title: columnID,
+                            widgetKeys: []
+                        }}
                     }
-                }
-            })
-        );
+                })
+            );
+        } else {
+            item = {
+                ...globalState.widgetsLibrary.data[key],
+                key: newKey,
+            };
+            setGlobalState(
+                update(globalState, {
+                    widgets: { $merge: { [newKey]: item } },
+                    columns: {
+                        [toContainer]: {
+                            widgetKeys: { $splice: [[toIndex, 0, newKey]] }
+                        }
+                    }
+                })
+            );
+        }
     };
 
     const move = (key: string, fromIndex: number, fromContainer: string, toIndex: number, toContainer: string) => {
@@ -104,19 +130,115 @@ const WebBuilder: FC = memo(function WebBuilder() {
         }
     };
 
-    function removeHelper(fromContainer: string, fromIndex: number) {
-        setGlobalState(
-            update(globalState, {
-                columns: {
-                    [fromContainer]: {
-                        widgetKeys: { $splice: [[fromIndex, 1],] }
-                    },
+    function removeHelper(widgetType: "basic" | "parent", widgetKey: string, fromContainer: string, fromIndex: number) {
+        if (widgetType === "parent") {
+            let globalTemp: WebsiteState = {...globalState};
+            const tempWidgetList = [widgetKey];
+            const tempColumnList = [...globalTemp.widgets[widgetKey].columns];
+
+            for (var i = 0; i < tempColumnList.length; i++) {
+                let columnID = tempColumnList[i];
+                let currColumn = globalTemp.columns[columnID];
+                tempWidgetList.push(...currColumn.widgetKeys);
+
+                for (var j = 0; j < currColumn.widgetKeys.length; j++) {
+                    let currWidget = globalTemp.widgets[currColumn.widgetKeys[j]];
+                    if (currWidget.widgetType === "parent") {
+                        tempColumnList.push(...currWidget.columns);
+                    }
                 }
-            })
-        );
+            }
+
+            const tempFunc = (value) => {
+                const temp = {...value};
+                temp[fromContainer].widgetKeys.splice(fromIndex, 1);
+                tempColumnList.forEach(columnID => {
+                    delete temp[columnID]
+                });
+                return temp;
+            }
+
+            setGlobalState(
+                update(globalState, {
+                    widgets: {$unset: tempWidgetList},
+                    columns: {$apply: tempFunc},
+                })
+            );
+        } else {
+            setGlobalState(
+                update(globalState, {
+                    widgets: {$unset: [widgetKey]},
+                    columns: {
+                        [fromContainer]: {
+                            widgetKeys: { $splice: [[fromIndex, 1],] }
+                        },
+                    }
+                })
+            );
+        }
     }
 
-    const createColumn = (root: Column) => {
+    function updateWidgetProperty(widgetKey: string, property: TextAreaInput | SelectInput, index: number, value: string) {
+        switch (property.type) {
+            case "select":
+                setGlobalState(
+                    update(globalState, {
+                        widgets: {
+                            [widgetKey]: {
+                                propertyInputs: {
+                                    [index]: {
+                                        choice: {$set: Number(value)}
+                                    }
+                                }
+                            }
+                        }
+                    })
+                );
+                console.log(globalState);
+                break;
+            case "textarea":
+                setGlobalState(
+                    update(globalState, {
+                        widgets: {
+                            [widgetKey]: {
+                                propertyInputs: {
+                                    [index]: {
+                                        data: {$set: value}
+                                    }
+                                }
+                            }
+                        }
+                    })
+                );
+                break;
+            default:
+                break;
+        }
+    }
+
+    function addColumnHelper(widgetKey: string) {
+        const newColumnID = uuid();
+        setGlobalState(
+            update(globalState, {
+                widgets: {
+                    [widgetKey]: {
+                        columns: {$push: [newColumnID]}
+                    }
+                },
+                columns: {
+                    [newColumnID]: {$set: {
+                            id: newColumnID,
+                            title: newColumnID,
+                            widgetKeys: []
+                        }
+                    }
+                }
+            })
+        )
+    }
+
+    function createColumn(root: Column): ReactNode {
+        console.log("this is the curr state:", globalState)
         const currColumn = root;
         const widgets = currColumn.widgetKeys.map((widgetKey, index) => {
             const currWidget = globalState.widgets[widgetKey];
@@ -126,8 +248,8 @@ const WebBuilder: FC = memo(function WebBuilder() {
                 });
                 return (
                     <div key={currWidget.key}>
-                        <Droppable index={index} containerId={currColumn.id} onDrop={onDrop} accepts={[ItemTypes.WIDGET, ItemTypes.ROW]} />
-                        <MultiColumnWidget uniqueKey={currWidget.key} widget={currWidget} index={index} containerId={currColumn.id}>
+                        <Droppable index={index} containerId={currColumn.id} onDrop={onDrop} accepts={[ItemTypes.WIDGET, ItemTypes.ROW, ItemTypes.CLONE]} />
+                        <MultiColumnWidget uniqueKey={currWidget.key} widget={currWidget} index={index} containerId={currColumn.id} removeWidget={removeHelper} addColumn={addColumnHelper}>
                             {newColumns}
                         </MultiColumnWidget>
                     </div>
@@ -136,8 +258,8 @@ const WebBuilder: FC = memo(function WebBuilder() {
             else {
                 return (
                     <div key={currWidget.key}>
-                        <Droppable index={index} containerId={currColumn.id} onDrop={onDrop} accepts={[ItemTypes.WIDGET, ItemTypes.ROW]} />
-                        <BasicWidget index={index} containerId={currColumn.id} widget={currWidget} removeWidget={removeHelper} />
+                        <Droppable index={index} containerId={currColumn.id} onDrop={onDrop} accepts={[ItemTypes.WIDGET, ItemTypes.ROW, ItemTypes.CLONE]} />
+                        <BasicWidget index={index} containerId={currColumn.id} widget={currWidget} removeWidget={removeHelper} updateState={updateWidgetProperty} />
                     </div>
                 )
             }
@@ -179,6 +301,6 @@ const WebBuilder: FC = memo(function WebBuilder() {
             </DndProvider>
         </div>
     );
-})
+}
 
 export default WebBuilder;

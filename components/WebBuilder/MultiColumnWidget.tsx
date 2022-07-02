@@ -1,6 +1,6 @@
 import type { FC, ReactNode } from "react";
 import React, { Children } from 'react';
-import { Col, Row } from "react-bootstrap";
+import { Button, Col, Row } from "react-bootstrap";
 import { useDrag } from "react-dnd";
 import { ItemTypes } from "../../types/ItemTypes";
 import { Widget } from "../../types/WebBuilderStateTypes";
@@ -12,6 +12,8 @@ export interface MultiColumnWidgetProps {
     widget: Widget
     index: number
     containerId: string
+    removeWidget: (widgetType: string, widgetKey: string, containerID: string, index: number) => void
+    addColumn: (widgetKey: string) => void
     children: ReactNode
 }
 
@@ -20,20 +22,28 @@ const MultiColumnWidget: FC<MultiColumnWidgetProps> = function MultiColumnWidget
     widget,
     index,
     containerId,
+    removeWidget,
+    addColumn,
     children,
 }) {
-    const [{ isDragging }, drag] = useDrag(
+    const [{ opacity }, drag] = useDrag(
         () => ({
             type: ItemTypes.ROW,
             item: { key: uniqueKey, index, containerId },
             collect: (monitor) => ({
-                isDragging: monitor.isDragging(),
+                opacity: monitor.isDragging()? 0.4 : 1, 
             }),
         }),
         [uniqueKey, index],
     )
 
-    const opacity = isDragging ? 0 : 1
+    function removeHelper() {
+        removeWidget("parent", widget.key, containerId, index);
+    }
+    
+    function addColumnHelper() {
+        addColumn(widget.key);
+    }
 
     return (
         <div
@@ -42,7 +52,9 @@ const MultiColumnWidget: FC<MultiColumnWidgetProps> = function MultiColumnWidget
             className={styles.multiColumnWidget}
         >
             <div className={moreStyles.title}>
-                { widget.name }
+                { widget.name + "  "}
+                <Button onClick={removeHelper} variant="danger">Delete</Button>
+                <Button onClick={addColumnHelper} variant="success">Add Column</Button>
             </div>
             <Row>
                 {
