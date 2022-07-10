@@ -1,22 +1,22 @@
-import { Navbar, Nav, Container, NavLink } from 'react-bootstrap';
+import { Navbar, Nav, Container, NavLink, Button } from 'react-bootstrap';
 import { useSession, signIn, signOut } from "next-auth/react";
 
 function NavBar() {
     const { data: session } = useSession();
 
-    function checkSignedIn() {
+    function siginStatus() {
         if (session) {
             return (
                 <div>
-                    {session.user.email + " "}
-                    <button onClick={() => signOut()}>Sign out</button>
+                    UserID: <a href={"/" + session.user.id}>{session.user.id}</a> {" "}
+                    <Button onClick={() => signOut()} variant="danger">Sign Out</Button>
                 </div>
             )
         }
         return (
             <div>
-                Not signed in
-                <button onClick={() => signIn()}>Sign in</button>
+                {"Not signed in "}
+                <Button onClick={() => signIn()}>Sign In</Button>
             </div>
         )
     }
@@ -24,7 +24,7 @@ function NavBar() {
     return (
         <Navbar sticky="top" bg="light" expand="lg">
             <Container>
-                <NavLink className='navbar-brand'>
+                <NavLink className='navbar-brand' href="/">
                     <h1>
                         <strong className='monokai-black'>Vanilla</strong>
                     </h1>
@@ -32,12 +32,17 @@ function NavBar() {
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="me-auto">
-                        <NavLink href="/webbuilder">Web Builder</NavLink>
-                        <NavLink href="/catalog">Catalog</NavLink>
+                        {session ?
+                            <>
+                                <NavLink href="/webbuilder">Web Builder</NavLink>
+                                <NavLink href="/catalog">Catalog</NavLink>
+                            </>
+                            : null
+                        }
                         <NavLink href="">FAQ</NavLink>
                         <NavLink href="">Contact</NavLink>
                     </Nav>
-                    { checkSignedIn() }
+                    {siginStatus()}
                 </Navbar.Collapse>
             </Container>
         </Navbar>

@@ -1,5 +1,5 @@
 import { Button, Col, Container, Row } from "react-bootstrap";
-import { memo, ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import type { FC } from 'react';
 import BasicWidget from '../components/WebBuilder/BasicWidget';
 import initialData from "../lib/initialData";
@@ -7,25 +7,36 @@ import { v4 as uuid } from 'uuid';
 import update from 'immutability-helper';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { useRouter } from 'next/router';
 
 import WidgetColumn from "../components/WebBuilder/WidgetColumn";
 import WidgetLibrary from "../components/WebBuilder/WidgetLibrary";
 import MultiColumnWidget from "../components/WebBuilder/MultiColumnWidget";
-import { Column, SelectInput, TextAreaInput, WebsiteState, Widget } from "../types/WebBuilderStateTypes";
+import { Column, SelectInput, TextAreaInput, WebsiteState } from "../types/WebBuilderStateTypes";
 import { ItemTypes, WidgetItem } from "../types/ItemTypes";
 import Droppable from "../components/WebBuilder/Droppable";
+import useSWR from "swr";
+
+const fetcher = async (url: string) => {
+    const tempRes = await fetch(url);
+    const res = await tempRes.json();
+    if (!tempRes.ok) {
+        const error = new Error(res.message);
+        throw error;
+      }
+    return res;
+};
 
 const WebBuilder: FC = function WebBuilder() {
+    const router = useRouter();
+    const { data: resData, error } = useSWR(router.isReady ? "/api/get/webbuilder/getWebsiteStack" : null, fetcher);
     const [globalState, setGlobalState] = useState(initialData)
 
     useEffect(() => {
-        const getInitialData = async () => {
-            const res = await fetch('http://localhost:3000/api/get/webbuilder/getWebsiteStack');
-            const resJson = await res.json();
-            setGlobalState(resJson.websiteStack);
+        if (!error && resData) {
+            setGlobalState(resData.websiteStack);
         }
-        getInitialData();
-    }, []);
+    }, [resData])
 
     const reorder = (key: string, containerId: string, fromIndex: number, toIndex: number) => {
         const temp = [...globalState.columns[containerId].widgetKeys]
@@ -283,6 +294,14 @@ const WebBuilder: FC = function WebBuilder() {
         return <WidgetLibrary column={column} widgets={widgets} />
     }
 
+    if (error) {
+        router.push("/");
+    }
+    if (!resData) {
+        return (
+            <div>"Loading..."</div>
+        );
+    }
     return (
         <div className="App">
             <DndProvider backend={HTML5Backend}>

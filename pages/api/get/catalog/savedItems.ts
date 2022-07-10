@@ -2,6 +2,7 @@ import { authOptions } from '../../auth/[...nextauth]';
 import { unstable_getServerSession } from "next-auth/next";
 import clientPromise from '../../../../lib/mongodb';
 import type { NextApiRequest, NextApiResponse } from "next";
+import { ObjectId } from 'mongodb';
 
 export default async function handler(
     req: NextApiRequest,
@@ -16,17 +17,10 @@ export default async function handler(
     }
 
     const connection = await clientPromise;
-    // search for _id of user
-    const getUserID = session.user;
-
-    const testDatabase = connection.db('test');
-    const users = testDatabase.collection('users');
-
-    const user = await users.findOne(getUserID);
 
     // search savedItems table
     const getSavedItems = {
-        owner: user._id,
+        owner: new ObjectId(session.user.id),
         name: "Saved Items"
     }
 

@@ -18,20 +18,7 @@ const CatalogItem: FC<CatalogItemProps> = function CatalogItem({
     const itemURL = "url(" + itemPreview.imageURL + ")"
     const anchorLinkRef = React.useRef(null)
 
-    function saveItemHandler() {
-        const temp = {
-            id: itemPreview._id
-        };
-        fetch('http://localhost:3000/api/post/saveItem', {
-            method: 'POST', // or 'PUT'
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(temp),
-        })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+    const saveItemHandler = () => {
         stateHandler(itemPreview._id, saved);
     }
 
@@ -40,7 +27,7 @@ const CatalogItem: FC<CatalogItemProps> = function CatalogItem({
             <div className={styles.itemBackground} style={{ backgroundImage: itemURL }} />
             <div className={styles.itemProperties}>
                 <div>
-                    <h3 className={styles.itemName}><a href={'/catalog/items/' + itemPreview._id} ref={anchorLinkRef}>{itemPreview.name}</a></h3>
+                    <h3 className={styles.itemName}><a href={'/' + itemPreview.creatorID + '/widgets/' + itemPreview._id} ref={anchorLinkRef}>{itemPreview.name}</a></h3>
                 </div>
                 <div>
                     <Button onClick={saveItemHandler} variant={saved ? "success" : "primary" }>{saved ? "Saved" : "Save Item"}</Button>

@@ -2,6 +2,7 @@ import { authOptions } from '../../auth/[...nextauth]';
 import { unstable_getServerSession } from "next-auth/next";
 import clientPromise from '../../../../lib/mongodb';
 import type { NextApiRequest, NextApiResponse } from "next";
+import { ObjectId } from 'mongodb';
 
 export default async function handler(
     req: NextApiRequest,
@@ -11,23 +12,17 @@ export default async function handler(
 
     if (!session) {
         console.log("not signed in");
-        res.status(401).json({ message: "You must be logged in." });
+        res.status(401).json({isItemSaved: false});
         return;
     }
+    
     const { id: itemID } = req.query;
 
     const connection = await clientPromise;
-    // search for _id of user
-    const getUserID = session.user;
-
-    const testDatabase = connection.db('test');
-    const users = testDatabase.collection('users');
-
-    const user = await users.findOne(getUserID);
 
     // search savedItems table
     const getSavedItems = {
-        owner: user._id,
+        owner: new ObjectId(session.user.id),
         name: "Saved Items"
     }
 
@@ -37,7 +32,7 @@ export default async function handler(
     const savedItems = await savedItemsCollection.findOne(getSavedItems);
 
     if (!savedItems) { // no saved items
-        return res.status(200).json({isItemSaved: false});
+        return res.status(200).json({isItemSaved: 'here'});
     }
 
     const idStrings = savedItems.itemIDs.map((idObj) => {

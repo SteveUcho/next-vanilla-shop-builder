@@ -18,17 +18,12 @@ export default async function handler(
     }
 
     const connection = await clientPromise;
-    // search for _id of user
-    const getUserID = session.user;
 
-    const testDatabase = connection.db('test');
-    const users = testDatabase.collection('users');
-
-    const user = await users.findOne(getUserID);
+    const userID = new ObjectId(session.user.id)
 
     // search savedItems table
     const getSavedItems = {
-        owner: user._id,
+        owner: userID,
         name: "Saved Items"
     }
 
@@ -47,7 +42,7 @@ export default async function handler(
 
     // get the website stack from the database
     const getWebsiteStackPartial = {
-        owner: user._id,
+        owner: userID,
         title: "First Website"
     }
     const websiteStackCollection = shopBuilder.collection('websiteStack');

@@ -11,6 +11,7 @@ export interface ItemPreiew {
     tags: string[]
     summary: string
     itemType: string
+    creatorID: string
 }
 
 export interface PageItem {

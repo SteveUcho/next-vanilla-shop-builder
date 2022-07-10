@@ -2,6 +2,7 @@ import { authOptions } from '../auth/[...nextauth]';
 import { unstable_getServerSession } from "next-auth/next";
 import clientPromise from '../../../lib/mongodb';
 import type { NextApiRequest, NextApiResponse } from "next";
+import { ObjectId, UpdateResult } from 'mongodb';
 
 export default async function handler(
     req: NextApiRequest,
@@ -12,23 +13,14 @@ export default async function handler(
 
     if (!session) {
         console.log("not signed in");
-        res.status(401).json({ message: "You must be logged in." });
-        return;
+        return res.status(401).json({ message: "You must be logged in." });
     }
 
     const connection = await clientPromise;
-    // search for _id of user
-    const getUserID = session.user;
-
-    const testDatabase = connection.db('test');
-    const users = testDatabase.collection('users');
-
-    const user = await users.findOne(getUserID);
-    console.log(user);
 
     // search savedItems table
     const getSavedItems = {
-        owner: user._id,
+        owner: new ObjectId(session.user.id),
         name: "Saved Items"
     }
 
@@ -39,29 +31,48 @@ export default async function handler(
 
     if (!savedItems) { // insert document into savedItems table
         await savedItemsCollection.insertOne({
-            owner: user._id,
+            owner: session.user.id,
             name: "Saved Items",
             itemIDs: [itemID],
         });
 
         return res.status(200).json({
-            message: 'Success',
+            isItemSaved: true,
+            didUpdate: true
         })
     }
 
     if (savedItems.itemIDs.includes(itemID)) {
-        await savedItemsCollection.updateOne(
+        const temp = await savedItemsCollection.updateOne(
             { _id: savedItems._id },
             { $pull: { itemIDs: itemID } }
         );
-    } else{
-        await savedItemsCollection.updateOne(
+        if (temp.modifiedCount === 0) {
+            return res.status(200).json({
+                isItemSaved: true,
+                didUpdate: false
+            })
+        } else {
+            return res.status(200).json({
+                isItemSaved: false,
+                didUpdate: true
+            })
+        }
+    } else {
+        const temp = await savedItemsCollection.updateOne(
             { _id: savedItems._id },
             { $push: { itemIDs: itemID } }
         );
+        if (temp.modifiedCount === 0) {
+            return res.status(200).json({
+                isItemSaved: false,
+                didUpdate: false
+            })
+        } else {
+            return res.status(200).json({
+                isItemSaved: true,
+                didUpdate: true
+            })
+        }
     }
-
-    return res.status(200).json({
-        message: 'Success',
-    })
 }
