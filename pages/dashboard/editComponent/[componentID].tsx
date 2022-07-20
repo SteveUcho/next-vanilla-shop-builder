@@ -4,10 +4,11 @@ import { go } from '@codemirror/legacy-modes/mode/go';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Button, Container } from 'react-bootstrap';
-import { Widget } from '../../../../types/ComponentEditorTypes';
+import { Widget } from '../../../types/ComponentEditorTypes';
 import useSWR from 'swr';
 import toast, { Toaster } from "react-hot-toast";
 import { ViewUpdate } from '@codemirror/view';
+import { useSession } from 'next-auth/react';
 
 const fetcher = async (url: string) => {
     const tempRes = await fetch(url);
@@ -15,14 +16,22 @@ const fetcher = async (url: string) => {
     if (!tempRes.ok) {
         const error = new Error(res.message);
         throw error;
-      }
+    }
     return res;
 };
 
 const EditWidget = function EditWidget() {
     const router = useRouter();
-    const { userID, widgetID } = router.query;
-    const { data: widgetData, error } = useSWR<Widget>(router.isReady ? '/api/get/editWidget/' + widgetID : null, fetcher);
+    const { componentID } = router.query;
+    const { data: session, status } = useSession({
+        required: true,
+        onUnauthenticated() {
+            if (router.isReady) {
+                router.push("/");
+            }
+        },
+    })
+    const { data: widgetData, error } = useSWR<Widget>(router.isReady ? '/api/get/editWidget/' + componentID : null, fetcher);
     const [codeState, setCodeState] = useState("");
 
     useEffect(() => {
@@ -36,13 +45,19 @@ const EditWidget = function EditWidget() {
     }
 
     async function saveChanges() {
-        const updateCode = fetch('/api/post/editWidget/' + widgetID, {
+        const updateCode = fetch('/api/post/editWidget/' + componentID, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ code: codeState })
         })
+            .then((res) => {
+                if (!res.ok) {
+                    const error = new Error("Something Occured");
+                    throw error;
+                }
+            })
         toast.promise(
             updateCode,
             {
@@ -54,7 +69,7 @@ const EditWidget = function EditWidget() {
     }
 
     if (error) {
-        router.push("/" + userID + "/widgets/" + widgetID);
+        router.push("/");
     }
     if (!widgetData) {
         return (
@@ -64,8 +79,8 @@ const EditWidget = function EditWidget() {
     return (
         <Container>
             <Toaster toastOptions={{ position: "top-right" }} />
-            <h1>UserID:{userID}</h1>
-            <h1>WidgetID:{widgetID}</h1>
+            <h1>UserID:{session.user.id}</h1>
+            <h1>WidgetID:{componentID}</h1>
             <hr />
             <CodeMirror
                 value={codeState}

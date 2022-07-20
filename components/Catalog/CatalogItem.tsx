@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { FC } from 'react';
 import React from 'react';
 import { Button } from 'react-bootstrap';
@@ -27,7 +28,7 @@ const CatalogItem: FC<CatalogItemProps> = function CatalogItem({
             <div className={styles.itemBackground} style={{ backgroundImage: itemURL }} />
             <div className={styles.itemProperties}>
                 <div>
-                    <h3 className={styles.itemName}><a href={'/' + itemPreview.creatorID + '/widgets/' + itemPreview._id} ref={anchorLinkRef}>{itemPreview.name}</a></h3>
+                    <h3 className={styles.itemName}><Link href={'/' + itemPreview.creatorID + '/widgets/' + itemPreview._id}><a ref={anchorLinkRef}>{itemPreview.name}</a></Link></h3>
                 </div>
                 <div>
                     <Button onClick={saveItemHandler} variant={saved ? "success" : "primary" }>{saved ? "Saved" : "Save Item"}</Button>

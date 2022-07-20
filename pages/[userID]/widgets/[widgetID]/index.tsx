@@ -51,7 +51,6 @@ const catalogItem: FC<catalogItemProps> = function catalogItem({ pageItem }) {
         } catch (e) {
             toast.error("Failed to add the new item.");
         }
-
     }
 
     if (error) {

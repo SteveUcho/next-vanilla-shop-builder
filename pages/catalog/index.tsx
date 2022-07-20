@@ -48,6 +48,7 @@ const catalog: FC<catalogProps> = function catalog({
             })
             const res = await tempRes.json()
             if (res.didUpdate) {
+                toast.success("Change Saved!");
                 return {savedItems: Array.from(optimisticData)};
             } else {
                 const newErr = new Error("Item not saved");

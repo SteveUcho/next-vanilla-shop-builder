@@ -1,4 +1,5 @@
 import { ObjectId } from 'mongodb'
+import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { FC } from 'react'
 import { Container } from 'react-bootstrap'
@@ -18,7 +19,7 @@ const UserProfile: FC<UserProfileProps> = ({
             <UserLayout user={userData}>
                 <div>
                     <h1>User Profile</h1>
-                    <p><a href={"/" + userData._id + "/widgets"}>See User Widgets</a></p>
+                    <p><Link href={"/" + userData._id + "/widgets"}><a>See User Widgets</a></Link></p>
                 </div>
             </UserLayout>
         </Container>

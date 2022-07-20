@@ -9,8 +9,6 @@ export default async function handler(
     res: NextApiResponse
 ) {
     const session = await unstable_getServerSession(req, res, authOptions);
-    const { widgetID } = req.query;
-    const widgetIDObj = new ObjectId(String(widgetID))
 
     if (!session) {
         console.log("not signed in");
@@ -22,22 +20,15 @@ export default async function handler(
 
     const shopBuilderDB = connection.db('shopBuilder');
     const catalogCollection = shopBuilderDB.collection('catalog');
+    const tempWidgets = catalogCollection.find({ creatorID: new ObjectId(session.user.id), itemType: "widget" });
+    const userWidgets = await tempWidgets.toArray();
+    const userWidgetsUpdated = userWidgets.map((userWidget) => {
+        return ({
+            ...userWidget,
+            _id: userWidget._id.toString(),
+            creatorID: userWidget.creatorID.toString()
+        })
+    })
 
-    // check creator of code
-    const checkQuery = {
-        _id: widgetIDObj
-    }
-    const creatorRes = await catalogCollection.findOne(checkQuery)
-    if (creatorRes.creatorID.toString() !== session.user.id) {
-        console.log(creatorRes.creatorID, session.user.id);
-        return res.status(403).json({message: "You are not allowed to do this."});
-    }
-
-    // find the item
-    const query = {
-        _id: widgetIDObj
-    }
-    const fullItem = await catalogCollection.findOne(query);
-
-    res.status(200).json(fullItem);
+    res.status(200).json({components: userWidgetsUpdated})
 }
