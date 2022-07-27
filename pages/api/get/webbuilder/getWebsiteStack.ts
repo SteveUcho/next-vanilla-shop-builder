@@ -89,8 +89,5 @@ export default async function handler(
         ...websiteStackPartial
     }
 
-    // console.log("\nsaved Widget\n", savedWidgets);
-    // console.log("\nthe website stack\n", websiteStack);
-
     return res.status(200).json({ websiteStack: websiteStack })
 }

@@ -1,6 +1,5 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { Container } from "react-bootstrap";
 import DashboardLayout from "../../components/Dashboard/DashboardLayout";
 
 const Dashboard = () => {

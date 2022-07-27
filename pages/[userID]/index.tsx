@@ -14,6 +14,9 @@ interface UserProfileProps {
 const UserProfile: FC<UserProfileProps> = ({
     userData
 }) => {
+    if (!userData) {
+        return (<div>Something Happened...</div>)
+    }
     return (
         <Container>
             <UserLayout user={userData}>

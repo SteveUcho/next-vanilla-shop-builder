@@ -2,7 +2,7 @@ import { authOptions } from '../auth/[...nextauth]';
 import { unstable_getServerSession } from "next-auth/next";
 import clientPromise from '../../../lib/mongodb';
 import type { NextApiRequest, NextApiResponse } from "next";
-import { ObjectId, UpdateResult } from 'mongodb';
+import { ObjectId } from 'mongodb';
 
 export default async function handler(
     req: NextApiRequest,

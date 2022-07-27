@@ -1,11 +1,8 @@
 import CodeMirror from '@uiw/react-codemirror';
-import { StreamLanguage } from '@codemirror/language';
-import { go } from '@codemirror/legacy-modes/mode/go';
-import { useEffect, useState } from 'react';
+import { javascript } from '@codemirror/lang-javascript';
+import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { Button, Col, Container, FloatingLabel, Form, Row } from 'react-bootstrap';
-import { Widget } from '../../../types/ComponentEditorTypes';
-import useSWR from 'swr';
 import { v4 as uuid } from 'uuid';
 import update from 'immutability-helper';
 import { TextAreaInput, SelectInput } from '../../../types/WebBuilderStateTypes';
@@ -40,7 +37,7 @@ const tempData: ComponentOptions = {
     ids: []
 }
 
-const EditWidget = () => {
+const EditComponent = () => {
     const router = useRouter();
     const { data: session, status } = useSession({
         required: true,
@@ -214,7 +211,7 @@ const EditWidget = () => {
                     <CodeMirror
                         value={codeState}
                         height="200px"
-                        extensions={[StreamLanguage.define(go)]}
+                        extensions={[javascript({ jsx: true })]}
                         onChange={handleChange}
                     />
                     <hr />
@@ -225,4 +222,4 @@ const EditWidget = () => {
     );
 }
 
-export default EditWidget;
+export default EditComponent;

@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import { Form } from "react-bootstrap";
+import { FormCheckType } from "react-bootstrap/esm/FormCheck";
 import { filterCategory } from "../../types/CatalogTypes";
 
 interface FilterOptionsProps {
@@ -28,7 +29,7 @@ const FilterOptions: FC<FilterOptionsProps> = function FilterOptions({
                                                     <Form.Check
                                                         key={`${option}-${indexX}-${indexY}`}
                                                         id={`${option}-${indexX}-${indexY}`}
-                                                        type={category.type}
+                                                        type={category.type as FormCheckType}
                                                         name={category.name}
                                                         label={option}
                                                     />

@@ -1,6 +1,6 @@
 import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
-import { go } from '@codemirror/legacy-modes/mode/go';
+import { javascript } from '@codemirror/lang-javascript';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Button, Container } from 'react-bootstrap';
@@ -85,7 +85,7 @@ const EditWidget = function EditWidget() {
             <CodeMirror
                 value={codeState}
                 height="200px"
-                extensions={[StreamLanguage.define(go)]}
+                extensions={[javascript({ jsx: true })]}
                 onChange={handleChange}
             />
             <hr />

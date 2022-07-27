@@ -4,7 +4,7 @@ import CatalogItem from "../../components/Catalog/CatalogItem";
 import FilterOptions from "../../components/Catalog/FilterOptions";
 import { catalogResponse } from "../../types/CatalogTypes";
 import update from 'immutability-helper';
-import { useRouter } from "next/router";
+import clientPromise from '../../lib/mongodb';
 import useSWR from "swr";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -12,19 +12,18 @@ const fetcher = async (url: string) => {
     const tempRes = await fetch(url);
     const res = await tempRes.json();
     if (!tempRes.ok) {
-        const error = new Error(res.message);
-        throw error;
+        throw new Error(res.message);
     }
     return res;
 };
 
-interface catalogProps {
+interface CatalogProps {
     catalogData: catalogResponse
 }
 
-const catalog: FC<catalogProps> = function catalog({
+const catalog: FC<CatalogProps> = ({
     catalogData,
-}) {
+}) => {
     const { data: savedData, mutate } = useSWR('/api/get/catalog/savedItems', fetcher);
 
     const modifyState = async (itemID: string, saved: boolean) => {
@@ -49,15 +48,14 @@ const catalog: FC<catalogProps> = function catalog({
             const res = await tempRes.json()
             if (res.didUpdate) {
                 toast.success("Change Saved!");
-                return {savedItems: Array.from(optimisticData)};
+                return { savedItems: Array.from(optimisticData) };
             } else {
-                const newErr = new Error("Item not saved");
-                throw newErr; 
+                throw new Error("Item not saved");
             }
         }
         try {
             await mutate(tempFunc, {
-                optimisticData: {savedItems: Array.from(optimisticData)},
+                optimisticData: { savedItems: Array.from(optimisticData) },
                 rollbackOnError: true,
                 revalidate: false,
                 populateCache: true
@@ -77,7 +75,7 @@ const catalog: FC<catalogProps> = function catalog({
                 </Col>
                 <Col md={9}>
                     <Row>
-                        { savedData ?
+                        {savedData ?
                             catalogData.items.map((item) => {
                                 if (!(new Set(savedData.savedItems)).has(item._id)) {
                                     // item is in saved items list
@@ -104,11 +102,41 @@ const catalog: FC<catalogProps> = function catalog({
 }
 
 export async function getStaticProps() {
-    const catalogRes = await fetch('http://localhost:3000/api/get/catalog/getFullCatalog');
-    const catalogData = await catalogRes.json();
+    const connection = await clientPromise;
+
+    const shopBuilderDB = connection.db('shopBuilder');
+    const catalogCollection = shopBuilderDB.collection('catalog');
+
+    const tempCatalog = catalogCollection.find({}).project({ propertyInputs: 0 });
+    const fullCatalog = await tempCatalog.toArray();
+
+    const fixedCatalog = fullCatalog.map((catItem) => {
+        return ({
+            ...catItem,
+            _id: catItem._id.toString(),
+            creatorID: catItem.creatorID.toString()
+        })
+    })
+
+    const temp = {
+        filterCategories: [
+            {
+                name: "Item Type",
+                type: "checkbox",
+                options: ["Widgets", "Fonts"]
+            },
+            {
+                name: "Price",
+                type: "radio",
+                options: ["Free", "$.99", "$2.99"]
+            }
+        ],
+        items: fixedCatalog
+    }
+
     return {
         props: {
-            catalogData,
+            catalogData: temp,
         },
     }
 }

@@ -6,9 +6,8 @@
     "start": "next start"
   },
   "dependencies": {
-    "@atlaskit/css-reset": "^6.3.13",
+    "@codemirror/lang-javascript": "^6.0.2",
     "@codemirror/language": "^6.2.0",
-    "@codemirror/legacy-modes": "^6.1.0",
     "@next-auth/mongodb-adapter": "^1.0.3",
     "@uiw/react-codemirror": "^4.10.4",
     "array-move": "^4.0.0",

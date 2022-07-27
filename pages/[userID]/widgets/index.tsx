@@ -14,6 +14,9 @@ const UserWigets: FC<UserWidgetProps> = function UserWidgets({
     userData,
     userWidgets
 }) {
+    if (!userData || !userWidgets) {
+        return (<div>Something Happened...</div>)
+    }
     return (
         <UserLayout user={userData}>
             <div>
@@ -53,11 +56,11 @@ export async function getStaticProps({ params }) {
     const catalogCollection = shopBuilderDB.collection('catalog');
     const tempWidgets = catalogCollection.find({ creatorID: new ObjectId(params.userID) });
     const userWidgets = await tempWidgets.toArray();
-    const userWidgetsUpdated = userWidgets.map((userWidget) => {
+    const userWidgetsUpdated = userWidgets.map((tempUserWidget) => {
         return ({
-            ...userWidget,
-            _id: userWidget._id.toString(),
-            creatorID: userWidget.creatorID.toString()
+            ...tempUserWidget,
+            _id: tempUserWidget._id.toString(),
+            creatorID: tempUserWidget.creatorID.toString()
         })
     })
 

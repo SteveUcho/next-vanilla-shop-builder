@@ -1,13 +1,12 @@
 import Link from "next/link";
 import type { FC, ReactNode } from "react";
-import { Col, Row } from "react-bootstrap";
-import { Container } from "react-bootstrap";
+import { Col, Row, Container } from "react-bootstrap";
 
-interface DashboardLayout {
+interface DashboardLayoutProps {
     children: ReactNode
 }
 
-const DashboardLayout: FC<DashboardLayout> = ({
+const DashboardLayout: FC<DashboardLayoutProps> = ({
     children
 }) => {
     return (
@@ -25,9 +24,6 @@ const DashboardLayout: FC<DashboardLayout> = ({
                     </div>
                     <div>
                         <Link href="/dashboard/components"><a>Manage Components</a></Link>
-                    </div>
-                    <div>
-                        <Link href="/dashboard/cms"><a>CMS</a></Link>
                     </div>
                 </Col>
                 <Col md={9}>

@@ -8,6 +8,7 @@ import update from 'immutability-helper';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useRouter } from 'next/router';
+import toast, { Toaster } from "react-hot-toast";
 
 import WidgetColumn from "../components/WebBuilder/WidgetColumn";
 import WidgetLibrary from "../components/WebBuilder/WidgetLibrary";
@@ -21,9 +22,8 @@ const fetcher = async (url: string) => {
     const tempRes = await fetch(url);
     const res = await tempRes.json();
     if (!tempRes.ok) {
-        const error = new Error(res.message);
-        throw error;
-      }
+        throw new Error(res.message);
+    }
     return res;
 };
 
@@ -51,7 +51,7 @@ const WebBuilder: FC = function WebBuilder() {
             update(globalState, {
                 columns: {
                     [containerId]: {
-                        widgetKeys: {$set: temp}
+                        widgetKeys: { $set: temp }
                     }
                 }
             })
@@ -76,11 +76,13 @@ const WebBuilder: FC = function WebBuilder() {
                         [toContainer]: {
                             widgetKeys: { $splice: [[toIndex, 0, newKey]] }
                         },
-                        [columnID]: {$set: {
-                            id: columnID,
-                            title: columnID,
-                            widgetKeys: []
-                        }}
+                        [columnID]: {
+                            $set: {
+                                id: columnID,
+                                title: columnID,
+                                widgetKeys: []
+                            }
+                        }
                     }
                 })
             );
@@ -143,16 +145,16 @@ const WebBuilder: FC = function WebBuilder() {
 
     function removeHelper(widgetType: "basic" | "parent", widgetKey: string, fromContainer: string, fromIndex: number) {
         if (widgetType === "parent") {
-            let globalTemp: WebsiteState = {...globalState};
+            let globalTemp: WebsiteState = { ...globalState };
             const tempWidgetList = [widgetKey];
             const tempColumnList = [...globalTemp.widgets[widgetKey].columns];
 
-            for (var i = 0; i < tempColumnList.length; i++) {
+            for (let i = 0; i < tempColumnList.length; i++) {
                 let columnID = tempColumnList[i];
                 let currColumn = globalTemp.columns[columnID];
                 tempWidgetList.push(...currColumn.widgetKeys);
 
-                for (var j = 0; j < currColumn.widgetKeys.length; j++) {
+                for (let j = 0; j < currColumn.widgetKeys.length; j++) {
                     let currWidget = globalTemp.widgets[currColumn.widgetKeys[j]];
                     if (currWidget.widgetType === "parent") {
                         tempColumnList.push(...currWidget.columns);
@@ -161,7 +163,7 @@ const WebBuilder: FC = function WebBuilder() {
             }
 
             const tempFunc = (value) => {
-                const temp = {...value};
+                const temp = { ...value };
                 temp[fromContainer].widgetKeys.splice(fromIndex, 1);
                 tempColumnList.forEach(columnID => {
                     delete temp[columnID]
@@ -171,14 +173,14 @@ const WebBuilder: FC = function WebBuilder() {
 
             setGlobalState(
                 update(globalState, {
-                    widgets: {$unset: tempWidgetList},
-                    columns: {$apply: tempFunc},
+                    widgets: { $unset: tempWidgetList },
+                    columns: { $apply: tempFunc },
                 })
             );
         } else {
             setGlobalState(
                 update(globalState, {
-                    widgets: {$unset: [widgetKey]},
+                    widgets: { $unset: [widgetKey] },
                     columns: {
                         [fromContainer]: {
                             widgetKeys: { $splice: [[fromIndex, 1],] }
@@ -198,7 +200,7 @@ const WebBuilder: FC = function WebBuilder() {
                             [widgetKey]: {
                                 propertyInputs: {
                                     [index]: {
-                                        choice: {$set: Number(value)}
+                                        choice: { $set: Number(value) }
                                     }
                                 }
                             }
@@ -214,7 +216,7 @@ const WebBuilder: FC = function WebBuilder() {
                             [widgetKey]: {
                                 propertyInputs: {
                                     [index]: {
-                                        data: {$set: value}
+                                        data: { $set: value }
                                     }
                                 }
                             }
@@ -233,11 +235,12 @@ const WebBuilder: FC = function WebBuilder() {
             update(globalState, {
                 widgets: {
                     [widgetKey]: {
-                        columns: {$push: [newColumnID]}
+                        columns: { $push: [newColumnID] }
                     }
                 },
                 columns: {
-                    [newColumnID]: {$set: {
+                    [newColumnID]: {
+                        $set: {
                             id: newColumnID,
                             title: newColumnID,
                             widgetKeys: []
@@ -281,10 +284,30 @@ const WebBuilder: FC = function WebBuilder() {
                 {widgets}
             </WidgetColumn>
         )
-    };
+    }
 
     const submitWebsite = () => {
         console.log(globalState);
+        const updateCode = fetch('/api/post/webBuilder/saveWebStack', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ stack: globalState })
+        })
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error("Something Occured");
+                }
+            })
+        toast.promise(
+            updateCode,
+            {
+                loading: 'Saving...',
+                success: <b>Settings saved!</b>,
+                error: <b>Could not save.</b>,
+            }
+        );
     };
 
     function widgetsLibraryHelper() {
@@ -304,6 +327,7 @@ const WebBuilder: FC = function WebBuilder() {
     }
     return (
         <div className="App">
+            <Toaster toastOptions={{ position: "top-right" }} />
             <DndProvider backend={HTML5Backend}>
                 <Container>
                     <h1>Website Builder</h1>

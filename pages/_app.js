@@ -1,4 +1,3 @@
-import "@atlaskit/css-reset"
 import 'bootstrap/dist/css/bootstrap.css'
 import NavBar from "../components/NavBar";
 import { SessionProvider } from "next-auth/react"
