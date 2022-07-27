@@ -17,7 +17,7 @@ const inputOptions = {
     Textarea: {
         name: "Temp TextArea",
         type: "textarea",
-        value: ""
+        data: ""
     },
     Select: {
         name: "Temp Select",
@@ -58,34 +58,35 @@ const EditWidget = () => {
     }
 
     async function saveChanges() {
-        const updateCode = fetch('/api/post/createWidget/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ code: codeState })
-        })
-            .then((res) => {
-                if (!res.ok) {
-                    const error = new Error("Something Occured");
-                    throw error;
-                }
-            })
-        toast.promise(
-            updateCode,
-            {
-                loading: 'Saving...',
-                success: <b>Settings saved!</b>,
-                error: <b>Could not save.</b>,
-            }
-        );
+        // const updateCode = fetch('/api/post/createWidget/', {
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/json'
+        //     },
+        //     body: JSON.stringify({ code: codeState })
+        // })
+        //     .then((res) => {
+        //         if (!res.ok) {
+        //             const error = new Error("Something Occured");
+        //             throw error;
+        //         }
+        //     })
+        // toast.promise(
+        //     updateCode,
+        //     {
+        //         loading: 'Saving...',
+        //         success: <b>Settings saved!</b>,
+        //         error: <b>Could not save.</b>,
+        //     }
+        // );
+        console.log(optionsState)
     }
 
     function optionChangeHandler(optionID, changeObj: { type: "textarea" | "select", isName?: boolean, index?: number }) {
         return (e) => {
             switch (changeObj.type) {
                 case "select":
-                    if (changeObj.index) {
+                    if (!changeObj.isName) {
                         setOptionsState(update(optionsState, {
                             data: {
                                 [optionID]: {
@@ -167,17 +168,17 @@ const EditWidget = () => {
                                             <p>Name</p>
                                             <Form.Control
                                                 aria-label="name"
-                                                onChange={optionChangeHandler(optionID, { type: "select" })}
+                                                onChange={optionChangeHandler(optionID, { type: "select", isName: true })}
                                             />
                                             <br />
                                             <p>Choices</p>
                                             {
                                                 optionData.options.map((optionName, index) => {
-                                                    return <div key={optionName + index}>
+                                                    return <div key={index}>
                                                         <Form.Control
                                                             aria-label="choice"
                                                             value={optionName}
-                                                            onChange={optionChangeHandler(optionID, { type: "select", index: index })}
+                                                            onChange={optionChangeHandler(optionID, { type: "select", isName: false, index: index })}
                                                         />
                                                         <br />
                                                     </div>
@@ -193,11 +194,13 @@ const EditWidget = () => {
                                             <p>Name</p>
                                             <Form.Control
                                                 aria-label="name"
+                                                onChange={optionChangeHandler(optionID, { type: "textarea", isName: true })}
                                             />
                                             <br />
                                             <p>TextBox</p>
                                             <Form.Control
                                                 aria-label="name"
+                                                onChange={optionChangeHandler(optionID, { type: "textarea", isName: false })}
                                             />
                                             <hr />
                                         </div>
